@@ -1,0 +1,287 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "数据质检计算服务",
+    "version": "1.0.0",
+    "description": "数据共享中心智能体 · 数据质检场景的确定性计算接口。只返回统计数字与匹配到的处置规则，不生成叙述结论。"
+  },
+  "servers": [
+    {
+      "url": "http://host.docker.internal:8090"
+    }
+  ],
+  "paths": {
+    "/dq/domains": {
+      "get": {
+        "summary": "查询数据域清单",
+        "description": "返回各数据域及其问题数、涉及表数。若要问某个数据域的问题，先调此接口确认域名称。",
+        "operationId": "dq_domains",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dq/tables": {
+      "get": {
+        "summary": "查询表清单",
+        "description": "返回指定数据域下的表及问题数。",
+        "operationId": "dq_tables",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "required": false,
+            "description": "数据域名称，如：营销",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/dq/overview": {
+      "get": {
+        "summary": "查询质检概览",
+        "description": "返回指定范围的质检总量、维度分布、状态分布。用于快速作答。",
+        "operationId": "dq_overview",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "required": false,
+            "description": "数据域名称，留空为全部",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/dq/report": {
+      "post": {
+        "summary": "生成质检报告素材",
+        "description": "返回质检报告三章节所需的全部结构化数据：问题剖析（维度/规则/状态/TOP表）、数据影响（强规则命中、影响对象数、负责人分布）、当前建议（匹配台账处置规则）。模型据此组织叙述，不得自行编造数字。",
+        "operationId": "dq_report",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": [
+                  [
+                    "domain",
+                    {
+                      "type": "string",
+                      "description": "数据域，如：营销"
+                    }
+                  ],
+                  [
+                    "table",
+                    {
+                      "type": "string",
+                      "description": "表名，可留空"
+                    }
+                  ],
+                  [
+                    "dimension",
+                    {
+                      "type": "string",
+                      "description": "质量维度中文名，如：完整性"
+                    }
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dq/recommend_rule": {
+      "post": {
+        "summary": "推荐质量规则",
+        "description": "根据问题描述/维度/目标表字段，推荐一条质量规则：含模板、判定逻辑、建议阈值（取同类规则众数）、建议强弱等级与参考依据。",
+        "operationId": "dq_recommend_rule",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": [
+                  [
+                    "problem_description",
+                    {
+                      "type": "string",
+                      "description": "问题描述（自然语言）"
+                    }
+                  ],
+                  [
+                    "dimension",
+                    {
+                      "type": "string",
+                      "description": "质量维度，可留空由描述推断"
+                    }
+                  ],
+                  [
+                    "table",
+                    {
+                      "type": "string",
+                      "description": "目标表名（库表全名）"
+                    }
+                  ],
+                  [
+                    "field",
+                    {
+                      "type": "string",
+                      "description": "目标字段名"
+                    }
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dq/cases": {
+      "post": {
+        "summary": "检索台账案例与处置规则",
+        "description": "按关键词/维度检索台账真实工单与归纳出的处置规则，用于「当前建议」的根因说明。",
+        "operationId": "dq_cases",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": [
+                  [
+                    "query",
+                    {
+                      "type": "string",
+                      "description": "关键词，如：主键重复"
+                    }
+                  ],
+                  [
+                    "dimension",
+                    {
+                      "type": "string",
+                      "description": "质量维度，可留空"
+                    }
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dq/exec_status": {
+      "get": {
+        "summary": "查询质检执行情况",
+        "description": "返回规则执行记录的状态分布、通过率、平均耗时与最慢规则。",
+        "operationId": "dq_exec_status",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "required": false,
+            "description": "数据域名称，留空为全部",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
