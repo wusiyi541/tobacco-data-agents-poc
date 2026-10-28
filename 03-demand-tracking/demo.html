@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>需求状态追踪智能体 · 统一演示</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft YaHei","PingFang SC",-apple-system,sans-serif;background:#EDF1F7;color:#12293F;
+     font-size:13px;-webkit-font-smoothing:antialiased;height:100vh;overflow:hidden}
+
+/* ================= 底部画布：共享平台门户（复刻） ================= */
+.canvas{height:100vh;overflow:hidden;background:#F3F6FB}
+.pf-nav{display:flex;align-items:center;gap:14px;padding:0 16px;height:44px;color:#fff;
+        background:linear-gradient(90deg,#3E6CDB,#4E80EE)}
+.pf-logo{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+.pf-logo i{width:24px;height:24px;border-radius:50%;background:#fff;color:#3E6CDB;font-style:normal;display:flex;
+           align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.pf-logo b{font-weight:600;font-size:13.5px;display:block;line-height:1.15}
+.pf-logo span{font-size:8.5px;opacity:.75;display:block;letter-spacing:.28em}
+.mi{font-size:12px;opacity:.85;white-space:nowrap;position:relative;padding:13px 0}
+.mi.on{opacity:1;font-weight:600}
+.mi.on::after{content:"";position:absolute;left:18%;right:18%;bottom:0;height:3px;background:#fff;border-radius:2px}
+.pf-sch{flex:1;min-width:0;max-width:340px;margin-left:auto;background:#fff;border-radius:4px 0 0 4px;height:26px;
+        display:flex;align-items:center;font-size:11px;color:#9AA6B2}
+.pf-sch span{padding-left:9px}
+.pf-schb{flex:0 0 auto;background:rgba(255,255,255,.25);border-radius:0 4px 4px 0;height:26px;display:flex;
+         align-items:center;padding:0 12px;font-size:11px}
+.pf-ico{position:relative;font-size:14px}
+.pf-ico i{position:absolute;top:-6px;right:-9px;background:#FF7A45;color:#fff;font-style:normal;font-size:9px;
+          border-radius:8px;line-height:1.5;padding:0 4px}
+.pf-av{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.4);display:flex;align-items:center;
+       justify-content:center;font-size:11px;font-weight:600}
+.banner{margin:12px 16px 0;height:64px;border-radius:10px;color:#fff;display:flex;align-items:center;
+        padding:0 24px;background:linear-gradient(90deg,#4E80EE,#7AA7F5);font-size:15px;font-weight:600;
+        letter-spacing:1px;box-shadow:0 4px 14px rgba(62,108,219,.22)}
+.stats{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin:12px 16px 0}
+.st{background:#fff;border:1px solid #E3E8EF;border-radius:10px;padding:12px 8px;text-align:center;
+    box-shadow:0 1px 2px rgba(18,41,63,.04)}
+.st .v{font-size:19px;font-weight:700;color:#2E6BE6}
+.st .v small{font-size:11px;font-weight:400;color:#8A98A8}
+.st .k{font-size:11px;color:#7A8896;margin-top:4px}
+.main{display:grid;grid-template-columns:1fr 250px;gap:12px;margin:12px 16px}
+.sec-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sec-h .t{font-size:15px;font-weight:700}
+.sec-h .fm{display:flex;gap:6px}
+.fm span{font-size:11px;color:#5B6B7C;background:#fff;border:1px solid #E3E8EF;border-radius:5px;padding:3px 9px}
+.fm span.on{background:#2E6BE6;border-color:#2E6BE6;color:#fff}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cc{background:#fff;border:1px solid #E3E8EF;border-radius:10px;padding:12px 14px;box-shadow:0 1px 2px rgba(18,41,63,.04)}
+.cc .nm{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.cc .nm i{width:22px;height:22px;border-radius:6px;font-style:normal;font-size:11px;display:flex;align-items:center;
+          justify-content:center;background:#EAF1FE;color:#2E6BE6;flex:0 0 auto}
+.cc .rg{font-size:10px;color:#B7C2CC;margin-top:2px}
+.cc .mt{display:flex;gap:12px;margin-top:8px;font-size:10.5px;color:#8A98A8}
+.cc .mt b{color:#5B6B7C;font-weight:600}
+.todo{background:#fff;border:1px solid #E3E8EF;border-radius:10px;padding:12px 14px;height:fit-content}
+.todo .t{font-size:13px;font-weight:700;margin-bottom:10px}
+.todo .row{display:flex;justify-content:space-between;font-size:11.5px;color:#5B6B7C;padding:5px 0;
+           border-bottom:1px dashed #EEF2F6}
+.todo .row:last-child{border-bottom:none}
+.todo .row b{font-size:14px;color:#2E6BE6}
+
+.tabs{display:flex;gap:16px;padding:0 14px;border-bottom:1px solid #EEF2F6;font-size:12px;
+           color:#8A98A8;flex:0 0 auto;overflow-x:auto}
+.tabs a{padding:8px 0;white-space:nowrap;cursor:pointer;border-bottom:2px solid transparent;
+        color:#8A98A8;text-decoration:none}
+.tabs a:hover{color:#3F5B78}
+.tabs a.on{color:#1F5FD0;font-weight:600;border-bottom-color:#3E6CDB;cursor:default}
+/* ================= 遮罩 + 悬浮对话框 ================= */
+.mask{position:fixed;inset:0;background:rgba(13,27,44,.5);z-index:10;transition:opacity .25s}
+.mask.off{opacity:0;pointer-events:none}
+.chat{position:fixed;top:3.5vh;right:2.5vw;bottom:3.5vh;width:432px;max-width:94vw;z-index:11;background:#fff;
+      border-radius:14px;box-shadow:0 16px 60px rgba(6,18,38,.45);display:flex;flex-direction:column;
+      overflow:hidden;transition:transform .28s,opacity .28s}
+.chat.off{transform:translateX(30px);opacity:0;pointer-events:none}
+.ch-head{display:flex;align-items:center;gap:8px;padding:13px 14px;border-bottom:1px solid #EEF2F6;background:#fff;
+         flex:0 0 auto}
+.ch-head .t{font-size:14px;font-weight:600}
+.ch-head .sub{font-size:10.5px;color:#8A98A8}
+.ch-head .x{margin-left:auto;width:26px;height:26px;border:0;border-radius:8px;background:#F2F5F9;color:#5B6B7C;
+            font-size:15px;cursor:pointer;line-height:1}
+.ch-head .x:hover{background:#E7ECF3;color:#12293F}
+.msgs{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:12px;background:#FCFDFE}
+.bub{max-width:94%;padding:9px 12px;border-radius:10px;font-size:12.5px;line-height:1.78;word-break:break-word}
+.bub-u{align-self:flex-end;background:#3E6CDB;color:#fff;border-bottom-right-radius:3px}
+.bub-a{align-self:flex-start;background:#F4F7FA;color:#2C4356;border-bottom-left-radius:3px}
+.bub-a p{margin:0 0 6px}.bub-a p:last-child{margin-bottom:0}
+.bub-a ul,.bub-a ol{margin:4px 0 6px;padding-left:18px}.bub-a li{margin:2px 0}
+.bub-a strong{color:#12293F}
+.bub-a code{background:#E9EEF5;color:#1B4B7A;padding:1px 4px;border-radius:3px;font-size:11.5px;
+            font-family:Consolas,Menlo,monospace}
+.bub-a table{border-collapse:collapse;width:100%;margin:6px 0;font-size:11.5px}
+.bub-a th,.bub-a td{border:1px solid #DFE6EF;padding:4px 6px;text-align:left;vertical-align:top}
+.bub-a th{background:#EEF3F9;font-weight:600}
+.bub-a .dl{display:inline-block;margin-top:6px;background:#2E6BE6;color:#fff;border-radius:6px;padding:4px 10px;
+           font-size:11.5px;cursor:pointer;text-decoration:none}
+.typing{align-self:flex-start;display:flex;align-items:center;gap:6px;color:#8A98A8;font-size:12px;
+        background:#F4F7FA;padding:8px 12px;border-radius:10px}
+.dot{width:5px;height:5px;border-radius:50%;background:#9FB0C2;display:inline-block;animation:bl 1.1s infinite}
+.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,60%,100%{opacity:.3}30%{opacity:1}}
+.chips{flex:0 0 auto;display:flex;gap:7px;padding:9px 14px 0;flex-wrap:wrap}
+.chip{font-size:11.5px;color:#3F5B78;background:#fff;border:1px solid #DCE4EE;border-radius:14px;
+      padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:#3E6CDB;color:#1F5FD0;background:#F7FAFF}
+.composer{flex:0 0 auto;display:flex;gap:9px;padding:10px 14px 13px;align-items:flex-end}
+.composer textarea{flex:1;resize:none;height:42px;max-height:120px;padding:10px 12px;font-family:inherit;
+        font-size:12.8px;line-height:1.5;overflow:hidden;border:1px solid #D7DFE9;border-radius:9px;outline:none;color:#12293F}
+.composer textarea:focus{border-color:#3E6CDB;box-shadow:0 0 0 2px rgba(62,108,219,.12)}
+.sendb{height:42px;padding:0 18px;border-radius:9px;border:1px solid #3E6CDB;background:#3E6CDB;color:#fff;
+       cursor:pointer;font-size:12.5px;font-family:inherit}
+.sendb:hover{background:#3563CE}
+.sendb:disabled{background:#C7D2E0;border-color:#C7D2E0;cursor:not-allowed}
+.foot{flex:0 0 auto;padding:0 14px 10px;font-size:10.5px;color:#A9B4C0}
+.fab{position:fixed;right:26px;bottom:26px;z-index:12;display:none;align-items:center;gap:6px;background:#3E6CDB;
+     color:#fff;padding:9px 16px;border-radius:22px;font-size:13px;cursor:pointer;border:0;font-family:inherit;
+     box-shadow:0 6px 18px rgba(62,108,219,.4)}
+.fab.show{display:flex}
+
+/* 身份选择行 + 权限条 */
+.ident{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:9px 14px 0;flex-wrap:wrap;
+       font-size:11.5px;color:#5B6B7C}
+.ident select,.ident input{font-family:inherit;font-size:12px;color:#12293F;padding:5px 8px;background:#fff;
+       border:1px solid #D7DFE9;border-radius:7px;outline:none}
+.ident select{min-width:150px;flex:1}
+.ident input{width:78px}
+.ident .ibtn{font-family:inherit;font-size:12px;padding:5px 12px;border-radius:7px;border:1px solid #3E6CDB;
+       background:#3E6CDB;color:#fff;cursor:pointer}
+.ident .ibtn:hover{background:#3563CE}
+.scope{flex:0 0 auto;display:flex;align-items:flex-start;gap:7px;padding:8px 14px;font-size:11px;
+       line-height:1.6;background:#F2F7FD;border-bottom:1px solid #E3E8EF;color:#3F5B78}
+.scope .tag{flex:0 0 auto;font-size:10px;padding:1px 6px;border-radius:4px;background:#E6F1FB;color:#185FA5;
+       margin-top:1px}
+.scope.warn{background:#FFF8EC;border-bottom-color:#F0E2C8;color:#7A5A1E}
+.scope.warn .tag{background:#FCEFD4;color:#8A5A00}
+.scope b{font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- 底部画布：共享平台门户 -->
+<div class="canvas">
+  <div class="pf-nav">
+    <div class="pf-logo"><i>烟</i><div><b>省烟草共享中心</b><span>专 数 服 务</span></div></div>
+    <span class="mi on">首页</span><span class="mi">需求管理</span><span class="mi">编目挂接</span>
+    <span class="mi">用数申请</span><span class="mi">个人中心</span><span class="mi">用数工具</span>
+    <span class="mi">资料中心</span><span class="mi">服务市场</span>
+    <div class="pf-sch"><span>搜索数据目录名称、数据源/部门关键字、查找相关数据</span></div>
+    <div class="pf-schb">搜索</div>
+    <div class="pf-ico">🔔<i>3</i></div>
+    <div class="pf-av">张</div>
+  </div>
+  <div class="banner">国家利益至上 · 消费者利益至上 —— 数据共享 · 专数服务</div>
+  <div class="stats">
+    <div class="st"><div class="v">3826 <small>个</small></div><div class="k">目录总数</div></div>
+    <div class="st"><div class="v">3763 <small>个</small></div><div class="k">库表目录数</div></div>
+    <div class="st"><div class="v">41 <small>个</small></div><div class="k">接口目录数</div></div>
+    <div class="st"><div class="v">22 <small>个</small></div><div class="k">文件目录数</div></div>
+    <div class="st"><div class="v">1967.48 <small>亿条</small></div><div class="k">库表交换数</div></div>
+    <div class="st"><div class="v">7 <small>亿次</small></div><div class="k">接口调用次数</div></div>
+    <div class="st"><div class="v">0 <small>次</small></div><div class="k">文件下载次数</div></div>
+  </div>
+  <div class="main">
+    <div>
+      <div class="sec-h"><span class="t">数据目录</span>
+        <span class="fm"><span class="on">全部</span><span>专卖监管</span><span>商业管理</span>
+        <span>决策与运营</span><span>工业管理</span><span>农业管理</span><span>电子烟管理</span></span>
+      </div>
+      <div class="cards" id="cc"></div>
+    </div>
+    <div class="todo">
+      <div class="t">我的待办</div>
+      <div class="row"><span>申请</span><b>0</b></div>
+      <div class="row"><span>审核</span><b>0</b></div>
+      <div class="row"><span>消息</span><b>10</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- 50% 遮罩 -->
+<div class="mask" id="mask"></div>
+
+<!-- 右侧悬浮对话框 -->
+<div class="chat" id="chat">
+  <div class="ch-head">
+    <div><div class="t">共享平台 AI 助手</div><div class="sub">需求状态追踪智能体</div></div>
+    <button class="x" id="closeBtn" title="收起对话框（查看底部页面）">×</button>
+  </div>
+  <div class="tabs"><a href="http://127.0.0.1:8095/">智能寻数</a><a href="http://127.0.0.1:8096/">数据质检</a><a class="on" href="http://127.0.0.1:8094/demo">需求状态追踪</a><a href="http://127.0.0.1:8093/demo">数据模型符合性检查</a></div>
+  <div class="ident" id="identBar">
+    <span>当前用户</span>
+    <select id="userSel"><option value="">请选择姓名</option></select>
+    <span>或输入</span>
+    <input id="userInput" placeholder="姓名" autocomplete="off">
+    <button class="ibtn" id="applyBtn">应用</button>
+  </div>
+  <div class="scope" id="scopeBar">
+    <span class="tag">权限</span>
+    <div id="scopeText">请先选择或输入本人姓名。未确认身份前不能查询任何需求单；流程口径类问题可不登录直接问。</div>
+  </div>
+  <div class="msgs" id="msgs"></div>
+  <div class="chips" id="chips"></div>
+  <div class="composer">
+    <textarea id="q" placeholder="请先在上方选择或输入姓名" disabled></textarea>
+    <button class="sendb" id="sendBtn" disabled>发送</button>
+  </div>
+  <div class="foot">只展示状态与轨迹，不做催办、不预测审批结果；数字均由服务端计算。</div>
+</div>
+<button class="fab" id="fab">🤖 AI 助手</button>
+
+<script>
+const $ = id => document.getElementById(id);
+const state = { conv: "", busy: false, user: "", scoped: 0 };
+
+/* ---------- 底部画布目录卡片（示意） ---------- */
+const CARDS = [
+  ["清远市销售计划表","一次/月度 · 5评分","数源部门：中国烟草总公司省公司/清远市…"],
+  ["32位码表out","2次/月度 · 5评分","数源部门：省烟草有限公司（本级）/专卖监督…"],
+  ["案件基本信息表out","一次/周度 · 5评分","数源部门：省烟草专卖局（公司）本级/专卖监督…"],
+  ["江门营销客户定量查询量表","4次/周度 · 5评分","数源部门：中国烟草总公司省公司/江门市…"],
+  ["SDK接收报警信息表","1次/周度 · 5评分","数源部门：省烟草有限公司（本级）/信息中心"],
+  ["公示发布信息表","34次/季度 · 5评分","数源部门：省烟草专卖局（公司）本级/信息中心"]
+];
+$("cc").innerHTML = CARDS.map(c =>
+  '<div class="cc"><div class="nm"><i>📁</i>' + c[0] + '</div><div class="rg">' + c[1] +
+  '</div><div class="mt"><span>申请 <b>0</b> 次</span><span>更新至 <b>2026-10-20</b></span></div>' +
+  '<div class="rg">' + c[2] + '</div></div>').join("");
+
+/* ---------- markdown ---------- */
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function inline(s){
+  // 先把 markdown 链接换成占位符，再自动链接化裸 URL，最后还原
+  const links = [];
+  s = esc(s).replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(_, t, h){
+    links.push(/^https?:/.test(h) ? '<a href="' + h + '" target="_blank">' + t + "</a>"
+                                  : '<span class="dl">' + t + "</span>");
+    return "\u0001" + (links.length - 1) + "\u0001";
+  }).replace(/(https?:\/\/[^\s)\u0001<>"']+)/g,
+             '<a href="$1" target="_blank">$1</a>')
+    .replace(/\u0001(\d+)\u0001/g, function(_, i){ return links[+i]; });
+  return s.replace(/`([^`]+)`/g,"<code>$1</code>")
+          .replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+}
+function md2html(md){
+  const lines = md.split(/\r?\n/); let html = "", list = null, tbl = null;
+  const closeList = () => { if (list) { html += "</" + list + ">"; list = null; } };
+  const closeTbl = () => { if (tbl) { html += "</tbody></table>"; tbl = null; } };
+  const cells = l => l.replace(/^\s*\|/,"").replace(/\|\s*$/,"").split("|").map(c => c.trim());
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].replace(/\s+$/,"");
+    if (!line.trim()) { closeList(); closeTbl(); continue; }
+    if (/^\s*\|.*\|\s*$/.test(line)) {
+      const isSep = /^\s*\|?[\s:|-]+\|[\s:|-]*$/.test(line);
+      if (!tbl && !isSep && /^\s*\|.*\|\s*$/.test(lines[i+1] || "") &&
+          /^\s*\|?[\s:|-]+\|[\s:|-]*$/.test(lines[i+1] || "")) {
+        closeList(); tbl = true;
+        html += "<table><thead><tr>" + cells(line).map(c => "<th>" + inline(c) + "</th>").join("") +
+                "</tr></thead><tbody>"; i++; continue;
+      }
+      if (tbl && !isSep) { html += "<tr>" + cells(line).map(c => "<td>" + inline(c) + "</td>").join("") + "</tr>"; continue; }
+      if (isSep) continue;
+    }
+    closeTbl();
+    const h = line.match(/^(#{1,4})\s+(.*)$/);
+    if (h) { closeList(); html += "<h3 style='font-size:12.8px;margin:8px 0 4px'>" + inline(h[2]) + "</h3>"; continue; }
+    const ul = line.match(/^\s*[-*]\s+(.*)$/);
+    if (ul) { if (list !== "ul") { closeList(); html += "<ul>"; list = "ul"; } html += "<li>" + inline(ul[1]) + "</li>"; continue; }
+    const ol = line.match(/^\s*\d+[.)]\s+(.*)$/);
+    if (ol) { if (list !== "ol") { closeList(); html += "<ol>"; list = "ol"; } html += "<li>" + inline(ol[1]) + "</li>"; continue; }
+    closeList();
+    html += "<p>" + inline(line) + "</p>";
+  }
+  closeList(); closeTbl();
+  return html;
+}
+
+/* ---------- 消息渲染 ---------- */
+function addHtml(html, cls){
+  const d = document.createElement("div");
+  d.className = "bub " + cls; d.innerHTML = html;
+  $("msgs").appendChild(d); $("msgs").scrollTop = 1e9;
+  return d;
+}
+function addUser(t){ addHtml(esc(t).replace(/\n/g,"<br>"), "bub-u"); }
+function addTyping(){
+  const d = document.createElement("div");
+  d.className = "typing"; d.id = "typing";
+  d.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span><span>正在查询需求单流转数据…</span>';
+  $("msgs").appendChild(d); $("msgs").scrollTop = 1e9;
+}
+
+/* ---------- SSE 流式问答（走 8094 自带 /chat 代理） ---------- */
+async function send(text){
+  const q = (text !== undefined ? text : $("q").value).trim();
+  if (!q || state.busy) return;
+  if (!state.user) { setLocked("请先选择或输入本人姓名。", true); return; }
+  $("q").value = ""; addUser(q);
+  state.busy = true; $("sendBtn").disabled = true;
+  addTyping();
+  let answer = "", conv = state.conv;
+  try {
+    const r = await fetch("/chat", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user: state.user, query: q, conversation_id: conv })
+    });
+    const d = await r.json();
+    document.getElementById("typing").remove();
+    if (d.ok) {
+      state.conv = d.conversation_id || state.conv;
+      addHtml(md2html(d.answer || "（无回答）") +
+        '<div style="font-size:11px;color:#96A3B2;margin-top:7px">数据截至 ' +
+        new Date().toLocaleTimeString("zh-CN") + " · 仅展示与本用户相关的需求单</div>", "bub-a");
+    } else {
+      addHtml("<strong>查询失败</strong>：" + esc(d.error || "未知错误"), "bub-a");
+    }
+  } catch (e) {
+    const t = document.getElementById("typing"); if (t) t.remove();
+    addHtml("<strong>请求异常</strong>：" + esc(String(e)), "bub-a");
+  }
+  state.busy = false; $("sendBtn").disabled = !state.user;
+}
+
+/* ---------- 身份与权限 ---------- */
+function setLocked(msg, warn){
+  state.user = ""; state.scoped = 0;
+  const bar = $("scopeBar");
+  bar.className = "scope" + (warn ? " warn" : "");
+  $("scopeText").textContent = msg;
+  $("q").disabled = true; $("sendBtn").disabled = true;
+  $("chips").innerHTML = "";
+}
+let SUGG = [];   // 开场建议问题：只从 Dify 应用配置读取
+function renderChips(){
+  $("chips").innerHTML = "";
+  SUGG.forEach(t => {
+    const s = document.createElement("span");
+    s.className = "chip"; s.textContent = t;
+    s.onclick = () => { if (!state.busy) { $("chips").innerHTML = ""; send(t); } };
+    $("chips").appendChild(s);
+  });
+}
+async function applyUser(name){
+  name = (name || "").trim();
+  if (!name) { setLocked("请先选择或输入本人姓名。未确认身份前不能查询任何需求单。", true); return; }
+  state.user = name; state.conv = "";
+  let d = null;
+  try { d = (await fetch("/req/me?user=" + encodeURIComponent(name)).then(r => r.json())).data; }
+  catch (e) {}
+  const bar = $("scopeBar");
+  if (!d) { setLocked("身份校验失败，请稍后重试。", true); return; }
+  state.scoped = d.可见单数;
+  if (!d.可见单数) {
+    bar.className = "scope warn";
+    $("scopeText").innerHTML = "<b>" + esc(name) + "</b> 名下暂无需求单（既非申请人，也非审核/处理人）。" +
+      "可以继续提问，但助手只会告知「名下暂无需求单」。";
+  } else {
+    bar.className = "scope";
+    $("scopeText").innerHTML = "当前用户 <b>" + esc(name) + "</b>（" + esc((d.角色 || []).join("、") || "—") +
+      "），可见 <b>" + d.可见单数 + "</b> 张需求单。仅可查询本人申请，或本人参与审核/处理的需求单。";
+  }
+  $("q").disabled = false; $("sendBtn").disabled = false;
+  $("q").placeholder = "问点具体的，例如：我的需求单到哪一步了";
+  $("msgs").innerHTML = "";
+  addHtml(esc("已确认身份：" + name + "。可以在权限范围内查询需求单进度、当前审核人与已等待时长。"), "bub-a");
+  renderChips();
+}
+(async function loadUsers(){
+  try {
+    const r = await fetch("/req/users").then(x => x.json());
+    (r.用户 || []).forEach(u => {
+      const o = document.createElement("option");
+      o.value = u.姓名;
+      o.textContent = u.姓名 + " · " + u.角色.join("/") + " · " + u.可见单数 + " 单";
+      $("userSel").appendChild(o);
+    });
+  } catch (e) {
+    $("scopeText").textContent = "用户列表加载失败：" + e;
+  }
+  const pre = new URLSearchParams(location.search).get("user");
+  if (pre) { $("userInput").value = pre; applyUser(pre); }
+})();
+$("userSel").onchange = e => { if (e.target.value) { $("userInput").value = ""; applyUser(e.target.value); } };
+$("applyBtn").onclick = () => applyUser($("userInput").value.trim() || $("userSel").value);
+$("userInput").addEventListener("keydown", e => { if (e.key === "Enter") $("applyBtn").click(); });
+
+/* ---------- 初始化：开场白 + 开场建议问题（全部来自 Dify 应用配置，本地不保留兜底） ---------- */
+(async function init(){
+  let opening = "";
+  try {
+    const o = await (await fetch("/api/params")).json();
+    if (o.ok) { opening = o.opening_statement || ""; SUGG = o.suggested_questions || []; }
+  } catch (e) {}
+  if (opening) addHtml(esc(opening), "bub-a");
+  else addHtml("开场白加载失败，请确认 Dify 应用已发布并从「启动演示服务.bat」重新启动。", "bub-a");
+})();
+
+/* ---------- 面板开关 ---------- */
+function closeChat(){ $("chat").classList.add("off"); $("mask").classList.add("off"); $("fab").classList.add("show"); }
+function openChat(){ $("chat").classList.remove("off"); $("mask").classList.remove("off"); $("fab").classList.remove("show"); }
+$("closeBtn").onclick = closeChat;
+$("fab").onclick = openChat;
+
+$("sendBtn").onclick = () => send();
+$("q").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
+</script>
+</body>
+</html>
