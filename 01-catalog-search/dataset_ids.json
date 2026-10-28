@@ -1,0 +1,6 @@
+{
+ "寻数POC-数据目录": "<your-dify-dataset-id>",
+ "寻数POC-业务术语库": "<your-dify-dataset-id>",
+ "寻数POC-指标口径库": "<your-dify-dataset-id>",
+ "寻数POC-权威表清单": "<your-dify-dataset-id>"
+}
