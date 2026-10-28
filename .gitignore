@@ -1,0 +1,8 @@
+.dify_cookie
+*_key.txt
+*_id.txt
+*.db
+__pycache__/
+*.log
+.DS_Store
+.env
