@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>元数据补充智能体 POC · 发起变更</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft YaHei","PingFang SC",-apple-system,sans-serif;background:#EDF1F7;color:#12293F;font-size:13px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:960px;margin:0 auto;padding:14px 0 40px}
+
+/* ---------- 浏览器壳 + 顶栏 ---------- */
+.mk{background:#fff;border:1px solid #E3E8EF;border-radius:12px;overflow:hidden}
+.mk-bar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#F5F7FA;border-bottom:1px solid #E3E8EF}
+.mk-bar .b{width:9px;height:9px;border-radius:50%;background:#D8DFE6;flex:0 0 auto}
+.mk-bar .url{flex:1;padding:3px 10px;background:#fff;border:1px solid #E3E8EF;border-radius:6px;font-size:11.5px;color:#8A98A8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shell{background:#F3F6FB;padding:0 0 14px}
+.pf-nav{display:flex;align-items:center;gap:9px;padding:6px 12px;background:linear-gradient(90deg,#3E6CDB,#4E80EE);height:36px;color:#fff}
+.pf-logo{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.pf-logo i{width:19px;height:19px;border-radius:50%;background:#fff;color:#3E6CDB;font-style:normal;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex:0 0 auto}
+.pf-logo b{font-weight:600;font-size:11.5px;display:block;line-height:1.15;white-space:nowrap}
+.pf-logo span{font-size:8px;opacity:.75;display:block;letter-spacing:.28em}
+.mi{font-size:10.5px;opacity:.88;white-space:nowrap;flex:0 0 auto;position:relative;padding:5px 0}
+.mi.on{opacity:1;font-weight:600}
+.mi.on::after{content:"";position:absolute;left:15%;right:15%;bottom:0;height:2.5px;background:#fff;border-radius:2px}
+.pf-sch{flex:1;min-width:0;background:#fff;border-radius:3px 0 0 3px;height:21px;display:flex;align-items:center;font-size:9.5px;color:#9AA6B2}
+.pf-sch span{padding-left:8px}
+.pf-schb{flex:0 0 auto;background:rgba(255,255,255,.25);border-radius:0 3px 3px 0;height:21px;display:flex;align-items:center;padding:0 9px;font-size:9.5px}
+.pf-ico{position:relative;font-size:12px;flex:0 0 auto}
+.pf-ico i{position:absolute;top:-5px;right:-8px;background:#FF7A45;color:#fff;font-style:normal;font-size:8px;border-radius:8px;line-height:1.5;padding:0 3px}
+.pf-av{width:19px;height:19px;border-radius:50%;background:rgba(255,255,255,.4);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600}
+
+/* ---------- 页头 ---------- */
+.pghd{padding:12px 22px 0}
+.pghd .t{font-size:15px;font-weight:700;color:#12293F}
+.pghd .s{font-size:10.5px;color:#8A98A8;margin-top:4px}
+
+/* ---------- 目录选择 ---------- */
+.pick{margin:12px 22px 0;padding:12px 14px;background:#fff;border:1px solid #CFE3FC;border-radius:10px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 2px rgba(18,41,63,.04)}
+.pick .lb{font-size:12px;color:#2A4A73;font-weight:500;white-space:nowrap;flex:0 0 auto}
+.pick .lb i{color:#D83931;font-style:normal;margin-right:3px}
+.pick select{flex:1;min-width:0;border:1px solid #9EC2F5;background:#F5F9FF;border-radius:6px;padding:7px 10px;font-size:12.5px;color:#12293F;outline:none;font-family:inherit}
+.pick select:focus{border-color:#2E6BE6;background:#fff}
+.pick .hint{font-size:10px;color:#8A98A8;white-space:nowrap;flex:0 0 auto}
+
+/* ---------- 变更卡片 ---------- */
+.card{margin:10px 22px 0;background:#fff;border:1px solid #E3E8EF;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(18,41,63,.04)}
+.c-tabs{display:flex;align-items:center;gap:20px;padding:0 16px;border-bottom:1px solid #EEF2F6}
+.c-tab{font-size:12.5px;color:#5B6B7C;padding:10px 2px;position:relative;white-space:nowrap}
+.c-tab.on{color:#2E6BE6;font-weight:600}
+.c-tab.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#2E6BE6;border-radius:2px}
+.c-tabbtn{margin-left:auto;background:#2E6BE6;color:#fff;border-radius:6px;font-size:11px;padding:5px 12px;white-space:nowrap;font-weight:500;border:none;cursor:pointer;font-family:inherit}
+.c-tabbtn:hover{background:#245BD2}
+.c-tabbtn:disabled{background:#A9BEE8;cursor:not-allowed}
+.c-body{padding:12px 16px 14px}
+.tip{display:flex;gap:8px;align-items:flex-start;background:#F0F7FF;border:1px solid #CFE3FC;border-radius:8px;padding:8px 12px;font-size:10.5px;color:#2A4A73;line-height:1.6}
+.tip b{color:#1D4FA8;font-weight:500}
+
+/* ---------- 表单 ---------- */
+.f{margin-top:12px}
+.fl{font-size:11.5px;color:#3F4E60;margin-bottom:5px}
+.fl i{color:#D83931;font-style:normal;margin-right:3px}
+.ta{background:#fff;border:1px solid #DFE5EC;border-radius:6px;padding:9px 10px;font-size:11.5px;color:#12293F;line-height:1.65;min-height:50px;width:100%;font-family:inherit;outline:none;resize:vertical}
+.ta:focus{border-color:#2E6BE6}
+.ta.empty{color:#B7C2CC}
+.ipt{background:#fff;border:1px solid #DFE5EC;border-radius:6px;padding:7px 10px;font-size:11.5px;color:#12293F;display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;font-family:inherit;outline:none}
+.ipt select{border:none;background:transparent;font-family:inherit;font-size:11.5px;color:inherit;outline:none;flex:1;padding:0;appearance:none}
+.ipt .arr{color:#8A98A8;font-size:10px;flex:0 0 auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+
+/* ---------- 待确认清单 ---------- */
+.panel{margin-top:14px;background:#fff;border:1px solid #E3E8EF;border-radius:8px;overflow:hidden}
+.panel-h{padding:10px 14px;border-bottom:1px solid #EEF2F6;font-size:12px;font-weight:500;color:#12293F;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#FAFBFC}
+.panel-h .st{font-size:10.5px;color:#8A98A8;font-weight:400}
+.kv{display:grid;grid-template-columns:1fr 1.7fr 1.1fr auto;gap:10px;padding:9px 14px;border-bottom:1px solid #EEF2F6;font-size:11px;color:#3F4E60;align-items:center}
+.kv.hd{font-size:10.5px;color:#5B6B7C;background:#F5F7FA}
+.kv:last-child{border-bottom:none}
+.kv .ai-val{color:#12293F}
+.kv .conf-h{color:#1E7E34;font-weight:600}
+.kv .conf-m{color:#854F0B;font-weight:600}
+.kv .ado{border:1px solid #2E6BE6;color:#2E6BE6;border-radius:5px;font-size:10px;padding:2px 9px;white-space:nowrap;background:#fff;cursor:pointer;font-family:inherit}
+.kv .ado.on{background:#2E6BE6;color:#fff}
+.kv .ado.manual{border-color:#D6DDE5;color:#8A98A8;background:#F5F7FA;cursor:default}
+.blist{margin-top:10px;display:flex;gap:10px;align-items:center}
+.bp{background:#2E6BE6;color:#fff;border-radius:6px;font-size:11.5px;padding:6px 16px;font-weight:500;white-space:nowrap;border:none;cursor:pointer;font-family:inherit}
+.bp:hover{background:#245BD2}
+.bs{background:#fff;color:#3F4E60;border:1px solid #D6DDE5;border-radius:6px;font-size:11.5px;padding:6px 14px;white-space:nowrap;cursor:pointer;font-family:inherit}
+.bs:hover{border-color:#2E6BE6;color:#2E6BE6}
+.bnote{font-size:10px;color:#8A98A8}
+.mc-foot{display:flex;gap:10px;align-items:center;padding-top:6px;margin-top:14px}
+.loading{padding:16px 14px;font-size:11.5px;color:#2E6BE6;display:flex;align-items:center;gap:8px}
+.spin{width:13px;height:13px;border:2px solid #CFE3FC;border-top-color:#2E6BE6;border-radius:50%;animation:sp .9s linear infinite;flex:0 0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.mkcap{font-size:12.5px;color:#8A98A8;margin-top:10px;line-height:1.7;padding:0 4px}
+.screen{font-size:12px;color:#185FA5;background:#E6F1FB;border-radius:4px;padding:1px 7px;margin-right:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mk">
+    <div class="mk-bar">
+      <i class="b"></i><i class="b"></i><i class="b"></i>
+      <div class="url" id="crumb">共享中心 / 编目挂接 / — / 发起变更</div>
+    </div>
+    <div class="shell">
+      <div class="pf-nav">
+        <div class="pf-logo"><i>烟</i><div><b>省烟草共享中心</b><span>专 数 服 务</span></div></div>
+        <span class="mi">首页</span><span class="mi">需求管理</span><span class="mi on">编目挂接</span>
+        <span class="mi">用数申请</span><span class="mi">个人中心</span><span class="mi">用数工具</span>
+        <span class="mi">资料中心</span><span class="mi">服务市场</span>
+        <div class="pf-sch"><span>搜索数据目录名称、数据源/部门关键字、查找相关数据</span></div>
+        <div class="pf-schb">搜索</div>
+        <div class="pf-ico">🔔<i>3</i></div>
+        <span style="display:flex;background:rgba(255,255,255,.18);border-radius:10px;gap:2px;padding:2px;flex:0 0 auto">
+          <span style="padding:1.5px 8px;font-size:9px;background:#fff;color:#2E5BB8;border-radius:8px;font-weight:600">业务用户</span>
+          <span style="padding:1.5px 8px;font-size:9px">运营人员</span>
+        </span>
+        <div class="pf-av">张</div>
+      </div>
+
+      <div class="pghd">
+        <div class="t" id="pgTitle">发起变更 — 请选择数据目录</div>
+        <div class="s" id="pgSub">选好目录后，点「⚡ AI 一键填充」由智能体给出业务元数据建议</div>
+      </div>
+
+      <!-- 目录选择 -->
+      <div class="pick">
+        <span class="lb"><i>*</i>数据目录</span>
+        <select id="catSel" onchange="onPick()"><option value="">请选择数据目录…</option></select>
+        <span class="hint" id="pickHint">POC 范围：5 个目录</span>
+      </div>
+
+      <!-- 发起变更卡片 -->
+      <div class="card">
+        <div class="c-tabs">
+          <span class="c-tab on">业务元数据</span>
+          <span class="c-tab">管理元数据</span>
+          <button class="c-tabbtn" id="aiBtn" disabled onclick="aiFill()">⚡ AI 一键填充</button>
+        </div>
+        <div class="c-body">
+          <div class="tip" id="tipLine">⚡ <span><b>AI 一键填充</b>：点击后对该表执行<b>抽样只读探查</b>（每字段抽样 100 行，仅用于生成元数据建议，数据不出共享中心环境、不用于模型训练）。建议在下方清单中<b>逐条采纳</b>，回填表单确认后提交。</span></div>
+
+          <div class="f">
+            <div class="fl"><i>*</i>业务描述</div>
+            <textarea class="ta empty" id="business_desc" placeholder="待填充">待填充</textarea>
+          </div>
+          <div class="f">
+            <div class="fl"><i>*</i>业务口径</div>
+            <textarea class="ta empty" id="business_rule" placeholder="待填充">待填充</textarea>
+          </div>
+          <div class="grid2">
+            <div>
+              <div class="fl"><i>*</i>数据负责人</div>
+              <div class="ipt"><span>张明</span></div>
+            </div>
+            <div>
+              <div class="fl"><i>*</i>更新频率</div>
+              <div class="ipt"><span id="val_freq" style="color:#B7C2CC">待采纳</span><span class="arr">▾</span></div>
+            </div>
+          </div>
+          <div class="f">
+            <div class="fl"><i>*</i>数据来源系统</div>
+            <div class="ipt"><span id="val_sys" style="color:#B7C2CC">待采纳</span></div>
+          </div>
+
+          <!-- 待确认清单 -->
+          <div class="panel" id="panel" style="display:none">
+            <div class="panel-h">AI 探查结果待确认清单<span class="st" id="panelStat"></span></div>
+            <div id="panelBody"></div>
+          </div>
+
+          <div class="blist" id="adoptBar" style="display:none">
+            <span class="bs" onclick="adoptSelected()">采纳所选并回填表单</span>
+            <span class="bnote">数据负责人为人工填报项，不出现在清单中</span>
+          </div>
+
+          <div class="mc-foot">
+            <button class="bp">提交审批</button>
+            <span class="bs">暂存草稿</span>
+            <span class="bs">取消</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mkcap">
+    <span class="screen">POC</span>
+    元数据补充智能体（页面嵌入 · 元数据页面 · 发起变更）：顶部选择目录 → 点「⚡ AI 一键填充」→ 智能体读取目录信息并对库表抽样探查（limit 100）→ 下方「待确认清单」逐条采纳后回填表单，再走「提交审批」。
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const DEF = {
+  business_desc: '待填充',
+  business_rule: '待填充',
+  update_freq:   '待采纳',
+  source_system: '待采纳',
+};
+let CATS = [], cur = null, FILL = null, SEL = {}, OFFLINE = false;
+
+// 双击本地文件打开时，接口不可用 → 用内置目录清单兜底，并提示走服务
+const FALLBACK_CATS = [
+  {catalog_code:'POC-DEMO/001', catalog_name:'一户一图-零售户基础信息表', org:'信息中心', share_type:'有条件共享'},
+  {catalog_code:'POC-DEMO/002', catalog_name:'零售户终端销售信息表',     org:'信息中心', share_type:'有条件共享'},
+  {catalog_code:'POC-DEMO/003', catalog_name:'案件基本信息表',           org:'信息中心', share_type:'有条件共享'},
+  {catalog_code:'POC-DEMO/004', catalog_name:'真烟流入品规分析表',       org:'信息中心', share_type:'有条件共享'},
+  {catalog_code:'POC-DEMO/005', catalog_name:'综管技术社区数据指标表',   org:'信息中心', share_type:'无条件共享'},
+];
+
+function fillOptions(list){
+  CATS = list;
+  $('catSel').innerHTML = '<option value="">请选择数据目录…</option>';
+  list.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.catalog_code;
+    o.textContent = c.catalog_name + '（' + c.org + '）';
+    $('catSel').appendChild(o);
+  });
+  $('pickHint').textContent = 'POC 范围：' + list.length + ' 个目录';
+}
+
+// 接口返回前先禁用，避免用户抢跑；成功用接口数据，失败才用兜底
+$('aiBtn').disabled = true;
+let settled = false;
+const fallback = () => {
+  if (settled) return;
+  settled = true;
+  fillOptions(FALLBACK_CATS);
+  OFFLINE = true;
+  $('pickHint').textContent = '目录已列出（双击打开模式）';
+  $('tipLine').innerHTML = '⚠️ <span>当前是<b>直接打开 HTML 文件</b>的方式，接口不可用：' +
+    'AI 一键填充、字段探查均无法调用。请改用 <b>http://127.0.0.1:8092/</b> 访问（先运行 ' +
+    '<b>poc_server.py</b>），即可正常调用智能体。</span>';
+};
+
+fetch('/api/catalog')
+  .then(r => r.json())
+  .then(list => {
+    if (settled) return;
+    if (Array.isArray(list) && list.length){ settled = true; fillOptions(list); }
+    else fallback();
+  })
+  .catch(fallback);
+// 打不开接口就别一直等（file:// 下 fetch 可能长时间挂起）
+setTimeout(fallback, 1800);
+
+function onPick(){
+  cur = CATS.find(c => c.catalog_code === $('catSel').value) || null;
+  resetForm();
+  if (!cur){ $('aiBtn').disabled = true; return; }
+  $('aiBtn').disabled = false;
+  $('pgTitle').textContent = '发起变更 — ' + cur.catalog_name;
+  $('crumb').textContent = '共享中心 / 编目挂接 / ' + cur.catalog_name + ' / 发起变更';
+  $('pgSub').textContent = '目录编码 ' + cur.catalog_code + ' · 所属机构 ' + cur.org +
+                           ' · 共享类型 ' + cur.share_type + ' · 以前的最新生效版本为基准调整，提交后进入变更审批';
+}
+
+function resetForm(){
+  $('business_desc').value = DEF.business_desc; $('business_desc').classList.add('empty');
+  $('business_rule').value = DEF.business_rule; $('business_rule').classList.add('empty');
+  $('val_freq').textContent = DEF.update_freq; $('val_freq').style.color = '#B7C2CC';
+  $('val_sys').textContent  = DEF.source_system; $('val_sys').style.color = '#B7C2CC';
+  $('panel').style.display = 'none';
+  $('adoptBar').style.display = 'none';
+  FILL = null; SEL = {};
+}
+
+const ROWS = [
+  ['business_desc', '业务描述'],
+  ['business_rule', '业务口径'],
+  ['update_freq',   '更新频率'],
+  ['source_system', '数据来源系统'],
+];
+
+function aiFill(){
+  if (!cur) return;
+  if (OFFLINE){
+    alert('当前是直接打开 HTML 文件的方式，接口不可用。\n请改用 http://127.0.0.1:8092/ 访问（需先运行 poc_server.py）。');
+    return;
+  }
+  const b = $('aiBtn');
+  b.disabled = true; b.textContent = 'AI 探查中…';
+  resetForm();
+  const body = document.createElement('div');
+  body.className = 'loading';
+  body.innerHTML = '<span class="spin"></span><span>正在读取目录信息并对库表执行抽样只读探查（每字段 100 行）…</span>';
+  $('panelBody').innerHTML = '';
+  $('panelBody').appendChild(body);
+  $('panelStat').textContent = '';
+  $('panel').style.display = 'block';
+
+  fetch('/api/ai_fill', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({catalog_code: cur.catalog_code})
+  }).then(r => r.json()).then(obj => {
+    b.disabled = false; b.textContent = '⚡ AI 一键填充';
+    if (!obj.ok){
+      $('panelBody').innerHTML = '<div class="loading" style="color:#D83931">调用失败：' +
+        (obj.error || '未知错误') + '</div>';
+      return;
+    }
+    render(obj.fill, obj.elapsed, obj.total_tokens);
+  }).catch(e => {
+    b.disabled = false; b.textContent = '⚡ AI 一键填充';
+    $('panelBody').innerHTML = '<div class="loading" style="color:#D83931">网络错误：' + e + '</div>';
+  });
+}
+
+function render(fill, elapsed, tokens){
+  FILL = fill;
+  const conf = c => ({high:'高', mid:'中', low:'低'}[c] || '中');
+  const confCls = c => (c === 'high' ? 'conf-h' : 'conf-m');
+  let nHigh = 0, nMid = 0, nLow = 0;
+
+  let html = '<div class="kv hd"><span>属性</span><span>AI 建议值（采纳后回填上方表单）</span>' +
+             '<span>置信度与依据</span><span>操作</span></div>';
+
+  ROWS.forEach(([k, label]) => {
+    const raw = fill[k];
+    const val = (typeof raw === 'string' && raw)
+      ? raw
+      : (raw && raw.value) ? raw.value : '';
+    const c = (raw && raw.confidence) || fill[k + '_confidence'] || 'mid';
+    const basis = (raw && raw.basis) || fill[k + '_basis'] || '—';
+    if (c === 'high') nHigh++; else if (c === 'low') nLow++; else nMid++;
+    SEL[k] = (c === 'high');   // 高置信默认已选
+    const on = SEL[k] ? ' on' : '';
+    html += '<div class="kv">' +
+      '<span>' + label + '</span>' +
+      '<span class="ai-val">' + (val || '<span style="color:#B7C2CC">（未生成，需人工填报）</span>') + '</span>' +
+      '<span><span class="' + confCls(c) + '">' + conf(c) + '</span> · ' + basis + '</span>' +
+      '<span class="ado' + on + '" data-k="' + k + '" onclick="toggle(this)">' +
+        (SEL[k] ? '已选' : '采纳') + '</span>' +
+    '</div>';
+  });
+
+  $('panelBody').innerHTML = html;
+  $('panelStat').textContent = '共 4 项属性 · 高置信 ' + nHigh + ' 项 / 中置信 ' + nMid + ' 项' +
+    (nLow ? ' / 低置信 ' + nLow + ' 项' : '') +
+    (elapsed ? ' · 耗时 ' + (elapsed/1000).toFixed(1) + 's / ' + tokens + ' tokens' : '');
+  $('panel').style.display = 'block';
+  $('adoptBar').style.display = 'flex';
+}
+
+function toggle(el){
+  const k = el.dataset.k;
+  SEL[k] = !SEL[k];
+  el.classList.toggle('on', SEL[k]);
+  el.textContent = SEL[k] ? '已选' : '采纳';
+}
+
+function adoptSelected(){
+  if (!FILL) return;
+  let n = 0;
+  ROWS.forEach(([k]) => {
+    if (!SEL[k]) return;
+    const raw = FILL[k];
+    const val = (typeof raw === 'string' && raw) ? raw
+              : (raw && raw.value) ? raw.value : '';
+    if (!val) return;
+    n++;
+    if (k === 'business_desc' || k === 'business_rule'){
+      const ta = $(k);
+      ta.value = val; ta.classList.remove('empty');
+    } else if (k === 'update_freq'){
+      $('val_freq').textContent = val; $('val_freq').style.color = '#12293F';
+    } else {
+      $('val_sys').textContent = val; $('val_sys').style.color = '#12293F';
+    }
+  });
+  if (n === 0){ alert('请先选择要采纳的建议项'); return; }
+  $('panel').scrollIntoView({behavior:'smooth', block:'start'});
+}
+</script>
+</body>
+</html>

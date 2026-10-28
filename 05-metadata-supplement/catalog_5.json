@@ -1,0 +1,121 @@
+[
+  {
+    "catalog_code": "POC-DEMO/001",
+    "catalog_name": "一户一图-零售户基础信息表",
+    "description": "零售户基础属性信息表（虚构演示）",
+    "org": "信息中心",
+    "data_type": "系统库表",
+    "share_type": "有条件共享",
+    "applied_count": 35,
+    "fields": [
+      "零售户uuid",
+      "许可证编号",
+      "客户编码",
+      "企业名称",
+      "经营地址",
+      "联系电话",
+      "联系人",
+      "入网时间",
+      "许可证有效期止",
+      "经营状态",
+      "档位",
+      "所属市局",
+      "客户经理",
+      "业态类型",
+      "更新时间"
+    ],
+    "fields_truncated": false
+  },
+  {
+    "catalog_code": "POC-DEMO/002",
+    "catalog_name": "零售户终端销售信息表",
+    "description": "终端销售明细基础层（虚构演示）",
+    "org": "营销中心",
+    "data_type": "系统库表",
+    "share_type": "有条件共享",
+    "applied_count": 12,
+    "fields": [
+      "销售流水号",
+      "客户编码",
+      "品规编码",
+      "品规名称",
+      "销售数量",
+      "销售金额",
+      "销售日期",
+      "终端类型",
+      "渠道类型",
+      "市局编码",
+      "是否20支终端",
+      "上传时间"
+    ],
+    "fields_truncated": false
+  },
+  {
+    "catalog_code": "POC-DEMO/003",
+    "catalog_name": "案件基本信息表",
+    "description": "专卖案件主表（虚构演示）",
+    "org": "专卖监督管理处",
+    "data_type": "系统库表",
+    "share_type": "不予共享",
+    "applied_count": 8,
+    "fields": [
+      "案件编号",
+      "案件类型",
+      "案发地市",
+      "涉案品规",
+      "涉案数量",
+      "案值金额",
+      "办案单位",
+      "立案日期",
+      "结案日期",
+      "案件状态",
+      "办案人",
+      "备注"
+    ],
+    "fields_truncated": false
+  },
+  {
+    "catalog_code": "POC-DEMO/004",
+    "catalog_name": "真烟流入品规分析表",
+    "description": "外流品规分析结果表（虚构演示）",
+    "org": "专卖监督管理处",
+    "data_type": "系统库表",
+    "share_type": "有条件共享",
+    "applied_count": 3,
+    "fields": [
+      "分析批次",
+      "品规编码",
+      "品规名称",
+      "流入数量",
+      "流出地",
+      "流入地",
+      "分析期间",
+      "生成时间",
+      "数据来源",
+      "置信度"
+    ],
+    "fields_truncated": false
+  },
+  {
+    "catalog_code": "POC-DEMO/005",
+    "catalog_name": "综管平台指标结果表",
+    "description": "综合管理指标加工结果（虚构演示）",
+    "org": "信息中心",
+    "data_type": "系统库表",
+    "share_type": "无条件共享",
+    "applied_count": 21,
+    "fields": [
+      "指标编码",
+      "指标名称",
+      "统计周期",
+      "指标值",
+      "计量单位",
+      "同比增幅",
+      "环比增幅",
+      "责任部门",
+      "更新时间",
+      "数据来源"
+    ],
+    "fields_truncated": false
+  }
+]
