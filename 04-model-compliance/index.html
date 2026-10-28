@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>数据模型符合性检查智能体 · POC</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#EDF1F7;font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei","PingFang SC",sans-serif;
+       color:#12293F;font-size:13px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1200px;margin:16px auto;height:calc(100vh - 32px);min-height:560px;background:#fff;
+        border:1px solid #E3E8EF;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;
+        box-shadow:0 6px 24px rgba(24,44,72,.06)}
+  /* 浏览器壳 */
+  .bar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#F5F7FA;border-bottom:1px solid #E3E8EF;flex:0 0 auto}
+  .bar i{width:9px;height:9px;border-radius:50%;background:#D8DFE6;display:block}
+  .bar .url{flex:1;margin-left:6px;padding:2px 10px;background:#fff;border:1px solid #E3E8EF;border-radius:6px;
+            font-size:11.5px;color:#8A98A8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .main{flex:1;display:grid;grid-template-columns:1fr 408px;min-height:0}
+  /* 左：原页面占位 */
+  .left{padding:16px 20px;background:#FBFCFD;overflow:auto;position:relative}
+  .crumb{font-size:11.5px;color:#8A98A8}
+  .ttl{font-size:16px;font-weight:500;color:#12293F;margin-top:4px}
+  .phbox{margin-top:14px;border:1px dashed #C9D5E3;border-radius:10px;background:#fff;
+         min-height:calc(100% - 100px);display:flex;flex-direction:column;align-items:center;justify-content:center;
+         gap:8px;padding:24px;text-align:center}
+  .ph-t{font-size:13px;font-weight:500;color:#5B6B7C}
+  .ph-d{font-size:12px;color:#9AA6B2;line-height:1.8;max-width:420px}
+  .fab{position:absolute;right:22px;bottom:22px;display:flex;align-items:center;gap:6px;background:#3E6CDB;color:#fff;
+       padding:7px 12px;border-radius:20px;font-size:12px;box-shadow:0 4px 14px rgba(62,108,219,.28)}
+  .fab span:first-child{font-weight:600;letter-spacing:.4px}
+  /* 右：对话面板 */
+  .side{border-left:1px solid #E3E8EF;display:flex;flex-direction:column;min-height:0;background:#fff}
+  .side-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid #EEF2F6;flex:0 0 auto}
+  .side-head .t{font-size:13.5px;font-weight:500}
+  .pill{font-size:10px;padding:1px 6px;border-radius:4px}
+  .p-info{color:#185FA5;background:#E6F1FB}
+  .tabs{display:flex;gap:14px;padding:0 14px;border-bottom:1px solid #EEF2F6;font-size:12px;color:#8A98A8;flex:0 0 auto;overflow-x:auto}
+  .tabs span{padding:9px 0;white-space:nowrap;cursor:default;border-bottom:2px solid transparent}
+  .tabs span.on{color:#1F5FD0;font-weight:500;border-bottom-color:#3E6CDB}
+  .tabs span.dim:hover{color:#B7C2CC}
+  .samples{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #F2F5F9;flex:0 0 auto}
+  .samples label{font-size:11px;color:#8A98A8;white-space:nowrap}
+  .samples select{flex:1;min-width:0;font-size:11.5px;color:#3F4E60;padding:4px 6px;border:1px solid #E3E8EF;
+                  border-radius:6px;background:#fff;font-family:inherit}
+  .msgs{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:12px;background:#FCFDFE}
+  .bub{max-width:94%;padding:9px 11px;border-radius:10px;font-size:12.5px;line-height:1.75;word-break:break-word}
+  .bub-u{align-self:flex-end;background:#3E6CDB;color:#fff;border-bottom-right-radius:3px}
+  .bub-a{align-self:flex-start;background:#F5F7FA;color:#2C4356;border-bottom-left-radius:3px;max-width:97%}
+  .chip{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.32);
+        border-radius:6px;padding:2px 7px;font-size:11px;margin-bottom:4px}
+  .bub-u.plain .chip{background:#EEF3FF;border-color:#CFE0FF;color:#1F5FD0}
+  .bub-a p{margin:0 0 6px}
+  .bub-a p:last-child{margin-bottom:0}
+  .bub-a ul,.bub-a ol{margin:4px 0 6px;padding-left:18px}
+  .bub-a li{margin:2px 0}
+  .bub-a strong{color:#12293F}
+  .bub-a code{background:#E9EEF5;color:#1B4B7A;padding:1px 4px;border-radius:3px;font-size:11.5px;
+              font-family:Consolas,Menlo,monospace}
+  .bub-a blockquote{margin:8px 0 0;padding:6px 10px;border-left:3px solid #B7CCE9;background:#EFF5FC;
+                    color:#3F5A75;font-size:11.5px;border-radius:0 6px 6px 0}
+  .bub-a h1,.bub-a h2,.bub-a h3{font-size:13px;margin:8px 0 4px}
+  .ans-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 8px;padding:6px 9px;background:#fff;
+            border:1px solid #E3E8EF;border-radius:8px;font-size:11.5px;color:#5B6B7C}
+  .sbadge{background:#EAF1FE;color:#1F5FD0;font-weight:600;padding:1px 7px;border-radius:5px}
+  .sbadge.warn{background:#FDEDE7;color:#B5431C}
+  .mini{margin-left:auto;border:1px solid #CFE0FF;background:#F5F9FF;color:#1F5FD0;border-radius:6px;
+        padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit}
+  .mini:hover{background:#EAF1FE}
+  .mut{color:#9AA6B2}
+  .typing{align-self:flex-start;background:#F5F7FA;border-radius:10px;padding:10px 12px;display:flex;gap:9px;
+          align-items:center;font-size:12px;color:#5B6B7C}
+  .dot{width:5px;height:5px;border-radius:50%;background:#8FB0DC;animation:bl 1s infinite}
+  .dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+  @keyframes bl{0%,100%{opacity:.25}50%{opacity:1}}
+  .foot{flex:0 0 auto;border-top:1px solid #EEF2F6;padding:9px 12px;background:#fff}
+  .attach{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:11px;color:#1F5FD0;background:#F2F6FF;
+          border:1px solid #DDE8FB;border-radius:6px;padding:4px 8px}
+  .attach b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .attach button{margin-left:auto;border:0;background:transparent;color:#8A98A8;cursor:pointer;font-size:13px;line-height:1}
+  .inputrow{display:flex;align-items:flex-end;gap:8px}
+  .plusb{width:30px;height:30px;border:1px solid #E3E8EF;border-radius:8px;display:flex;align-items:center;
+         justify-content:center;color:#5B6B7C;cursor:pointer;font-size:16px;flex:0 0 auto;background:#fff}
+  .plusb:hover{border-color:#CFE0FF;color:#1F5FD0;background:#F5F9FF}
+  textarea{flex:1;min-height:34px;max-height:120px;resize:none;border:1px solid #E3E8EF;border-radius:8px;
+           padding:7px 10px;font-size:12.5px;font-family:inherit;color:#12293F;outline:none;line-height:1.6}
+  textarea:focus{border-color:#B7CCE9}
+  .send{padding:8px 14px;border:0;border-radius:8px;background:#3E6CDB;color:#fff;font-size:12.5px;cursor:pointer;flex:0 0 auto;font-family:inherit}
+  .send:disabled{background:#B7C6DD;cursor:not-allowed}
+  .hint{padding:5px 2px 0;font-size:10.5px;color:#9AA6B2}
+  @media (max-width:920px){
+    .main{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+    .left{display:none}
+    .side{border-left:0}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar"><i></i><i></i><i></i><div class="url">共享中心 / 编目挂接 / 新增数据</div></div>
+  <div class="main">
+    <div class="left">
+      <div class="crumb">编目挂接 &nbsp;/&nbsp; 新增数据</div>
+      <div class="ttl">新增数据</div>
+      <div class="phbox">
+        <div class="ph-t">原页面占位</div>
+        <div class="ph-d">此处为共享中心「编目挂接 · 新增数据」原有页面（目录基本信息、数据范围、字段清单等表单）。
+          本 POC 不复刻页面内容，只验证右侧对话面板：直接粘贴建表语句或用「＋」上传 DDL / 表结构 CSV，助手逐项核对并给出建议改法。</div>
+      </div>
+      <div class="fab"><span>AI</span><span>助手</span></div>
+    </div>
+
+    <div class="side">
+      <div class="side-head"><div class="t">共享平台 AI 助手</div><span class="pill p-info">对话</span></div>
+      <div class="tabs">
+        <span class="dim">智能寻数</span><span class="dim">数据质检</span><span class="dim">需求状态追踪</span>
+        <span class="on">数据模型符合性检查</span>
+      </div>
+      <div class="samples">
+        <label>试用样例</label>
+        <select id="sample"><option value="">选择一个样例表结构…</option></select>
+      </div>
+      <div class="msgs" id="msgs"></div>
+      <div class="foot">
+        <div class="attach" id="attach" style="display:none">
+          <span id="attachIcon">📄</span><b id="attachName"></b>
+          <button id="attachDel" title="移除">×</button>
+        </div>
+        <div class="inputrow">
+          <div class="plusb" id="plus" title="上传建表语句（.sql）或表结构清单（.csv）">＋</div>
+          <textarea id="q" rows="1" placeholder="粘贴建表语句（CREATE TABLE …），或说明要检查的表；也可点「＋」上传文件…"></textarea>
+          <button class="send" id="send">发送</button>
+        </div>
+        <div class="hint">回车发送 · Shift+回车换行 · 检查结论由规则引擎确定，模型只负责成文，不改动任何数据</div>
+      </div>
+    </div>
+  </div>
+</div>
+<input type="file" id="file" accept=".sql,.csv,.txt,.md" style="display:none">
+
+<script>
+const state = { ddlText: "", fileName: "", busy: false, lastDdl: "" };
+const $ = id => document.getElementById(id);
+const msgs = $("msgs"), q = $("q");
+
+/* ---------------- 极简 markdown 渲染（回答里只用得到这些语法） ---------------- */
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function inline(s){
+  return esc(s)
+    .replace(/`([^`]+)`/g,"<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>")
+    .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
+}
+function md2html(md){
+  const lines = md.split(/\r?\n/); let html = "", list = null, quote = [];
+  const closeList = () => { if (list) { html += "</" + list + ">"; list = null; } };
+  const flushQuote = () => { if (quote.length) { html += "<blockquote>" + quote.join("<br>") + "</blockquote>"; quote = []; } };
+  for (const raw of lines) {
+    const line = raw.replace(/\s+$/, "");
+    if (!line.trim()) { closeList(); flushQuote(); continue; }
+    if (/^&gt;\s?/.test(line) || /^>\s?/.test(line)) { closeList(); quote.push(inline(line.replace(/^>\s?/, ""))); continue; }
+    flushQuote();
+    const h = line.match(/^(#{1,4})\s+(.*)$/);
+    if (h) { closeList(); html += "<h3>" + inline(h[2]) + "</h3>"; continue; }
+    const ul = line.match(/^\s*[-*]\s+(.*)$/);
+    if (ul) { if (list !== "ul") { closeList(); html += "<ul>"; list = "ul"; } html += "<li>" + inline(ul[1]) + "</li>"; continue; }
+    const ol = line.match(/^\s*\d+[.)]\s+(.*)$/);
+    if (ol) { if (list !== "ol") { closeList(); html += "<ol>"; list = "ol"; } html += "<li>" + inline(ol[1]) + "</li>"; continue; }
+    closeList();
+    html += "<p>" + inline(line) + "</p>";
+  }
+  closeList(); flushQuote();
+  return html;
+}
+
+/* ---------------- 消息渲染 ---------------- */
+function addUser(text, fileName){
+  const d = document.createElement("div");
+  d.className = "bub bub-u" + (fileName ? "" : " plain");
+  d.innerHTML = (fileName ? '<div class="chip">📄 ' + esc(fileName) + "</div>" : "") +
+                (text ? esc(text).replace(/\n/g,"<br>") : (fileName ? "帮我检查这张表是否符合规范" : ""));
+  msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+}
+function addTyping(){
+  const d = document.createElement("div");
+  d.className = "typing"; d.id = "typing";
+  d.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>' +
+                '<span>正在解析表结构并逐项核对…</span>';
+  msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+  return d;
+}
+function addSystem(text){
+  const d = document.createElement("div");
+  d.className = "bub bub-a"; d.innerHTML = "<p>" + esc(text) + "</p>";
+  msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+}
+function addAnswer(answer){
+  let payload = null;
+  const m = answer.match(/<!--FINDINGS:([\s\S]*?)-->/);
+  if (m) { try { payload = JSON.parse(m[1]); } catch (e) { payload = null; } }
+  const body = answer.replace(/<!--FINDINGS:[\s\S]*?-->/, "").trim();
+  const d = document.createElement("div");
+  d.className = "bub bub-a";
+  let meta = "";
+  if (payload && payload.summary) {
+    const s = payload.summary, bad = payload.score < 90;
+    meta = '<div class="ans-meta"><span class="sbadge' + (bad ? " warn" : "") + '">评分 ' + payload.score + "</span>" +
+           "<span>" + (s.total || 0) + " 项不符合</span>" +
+           '<span class="mut">违反 ' + (s["违反"]||0) + " · 风险 " + (s["风险"]||0) + " · 建议 " + (s["建议"]||0) + "</span>" +
+           '<button class="mini" data-i="' + msgs.children.length + '">导出检查清单</button></div>';
+  }
+  d.innerHTML = meta + md2html(body);
+  d.querySelectorAll("button.mini").forEach(() => {});
+  const btn = d.querySelector(".mini");
+  if (btn && payload) btn.onclick = () => exportCsv(payload);
+  msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+}
+
+/* ---------------- 导出检查清单（CSV，Excel 可直接打开） ---------------- */
+function exportCsv(f){
+  const cell = v => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
+  const rows = [["表名","规则编号","检查项类型","级别","元模型属性","判据","位置","现状","建议","依据"]];
+  (f.findings || []).forEach(x => (x.items || []).forEach(it => {
+    rows.push([x.table, x.rule_id, x.type, x.severity, x.attr, x.criterion, it.field, it.current, it.expected, x.basis]);
+  }));
+  (f.pending || []).forEach(p => {
+    const attr = typeof p === "string" ? p : (p.attr || "");
+    rows.push(["（业务/管理元数据待填报）","—","完整性",  "待确认", attr, "建表语句无法判断，需在编目页填报","", "", "", "5.2 / 5.3 元模型"]);
+  });
+  const csv = "\ufeff" + rows.map(r => r.map(cell).join(",")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = "模型符合性检查清单_" + new Date().toISOString().slice(0,10) + ".csv";
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ---------------- 文件读取 ---------------- */
+function readFile(f){
+  const r = new FileReader();
+  r.onload = () => {
+    let text = r.result || "";
+    if (/\uFFFD/.test(text)) {  // 疑似 GBK 导出
+      try {
+        const buf = r._buf;
+        text = new TextDecoder("gbk").decode(buf);
+      } catch (e) {}
+    }
+    state.ddlText = text; state.fileName = f.name;
+    $("attach").style.display = "flex";
+    $("attachName").textContent = f.name + "（" + text.length + " 字符）";
+    $("q").placeholder = "可以对这张表追问，例如：命名问题具体怎么改？";
+  };
+  const r2 = new FileReader();
+  r2.onload = () => { r._buf = r2.result; r.readAsText(f, "utf-8"); };
+  r2.readAsArrayBuffer(f);
+}
+function setAttach(name, text){
+  state.ddlText = text; state.fileName = name;
+  $("attach").style.display = "flex";
+  $("attachName").textContent = name + "（" + text.length + " 字符）";
+}
+
+/* ---------------- 发送 ---------------- */
+async function send(){
+  if (state.busy) return;
+  const text = q.value.trim();
+  if (!text && !state.ddlText) { q.focus(); return; }
+  let ddl = state.ddlText, name = state.fileName;
+  if (!ddl && /create\s+table/i.test(text)) { name = ""; }           // 直接粘贴语句
+  else if (!ddl && state.lastDdl && !/create\s+table/i.test(text)) {  // 追问复用上次文件
+    ddl = state.lastDdl; name = state.fileName || "上次上传的表结构";
+  }
+  state.lastDdl = ddl || text;
+  addUser(text, name);
+  q.value = ""; q.style.height = "auto";
+  state.busy = true; $("send").disabled = true;
+  const t = addTyping();
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: text || "帮我检查这张表是否符合元数据规范", ddl_text: ddl, file_name: name })
+    });
+    const obj = await res.json();
+    t.remove();
+    if (!obj.ok) addSystem("检查失败：" + (obj.error || "未知错误"));
+    else addAnswer(obj.answer || "");
+  } catch (e) {
+    t.remove(); addSystem("请求失败：" + e.message + "（请确认已通过 http://127.0.0.1:8093/ 访问）");
+  }
+  state.busy = false; $("send").disabled = false;
+  // 上传过一次后清掉附件，避免下次误用；内容已进 lastDdl
+  state.ddlText = ""; state.fileName = "";
+  $("attach").style.display = "none";
+  q.placeholder = "继续追问，或上传另一张表的建表语句…";
+  q.focus();
+}
+
+/* ---------------- 事件 ---------------- */
+$("plus").onclick = () => $("file").click();
+$("file").onchange = e => { const f = e.target.files[0]; if (f) readFile(f); e.target.value = ""; };
+$("attachDel").onclick = () => { state.ddlText = ""; state.fileName = ""; $("attach").style.display = "none"; };
+$("send").onclick = send;
+q.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+});
+q.addEventListener("input", () => {
+  q.style.height = "auto"; q.style.height = Math.min(120, q.scrollHeight) + "px";
+});
+document.querySelectorAll(".tabs span.dim").forEach(el => {
+  el.onclick = () => addSystem("本 POC 仅实现「数据模型符合性检查」；智能寻数、数据质检、需求状态追踪见其他 POC 页面。");
+});
+
+fetch("/api/samples").then(r => r.json()).then(o => {
+  if (!o.ok) return;
+  o.items.forEach(it => {
+    const op = document.createElement("option");
+    op.value = it.name; op.textContent = it.label;
+    $("sample").appendChild(op);
+  });
+}).catch(() => {});
+$("sample").onchange = async e => {
+  const name = e.target.value; e.target.value = "";
+  if (!name) return;
+  try {
+    const o = await (await fetch("/api/sample?name=" + encodeURIComponent(name))).json();
+    if (o.ok) setAttach(name, o.text);
+  } catch (err) {}
+};
+
+addSystem("我是数据模型符合性检查助手。把建表语句（CREATE TABLE …）粘贴到输入框，或用「＋」上传 .sql / 表结构 .csv 文件，" +
+          "我会依据《元数据管理规范》逐项核对，给出不符合项、位置与建议改法。右侧「试用样例」里有标准表与问题表的对比样例。");
+
+/* 演示模式：?demo=07 自动加载对应样例并检查（便于汇报演示与截图） */
+(async function demo(){
+  const m = location.search.match(/demo=([\w.-]+)/);
+  if (!m) return;
+  try {
+    const o = await (await fetch("/api/samples")).json();
+    const it = (o.items || []).find(x => x.name.indexOf(m[1]) === 0);
+    if (!it) return;
+    const s = await (await fetch("/api/sample?name=" + encodeURIComponent(it.name))).json();
+    if (!s.ok) return;
+    setAttach(s.name, s.text);
+    q.value = "帮我检查这张表是否符合规范";
+    send();
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
