@@ -646,7 +646,7 @@ SCHEMAS = {
     "LogEntry": _obj({
         "时间": {"type": "string", "example": "2026-10-19 16:42:39"},
         "环节": {"type": "string", "example": "主管部门审核"},
-        "处理人": {"type": "string", "example": "张鹏宇"},
+        "处理人": {"type": "string", "example": "演示审核员乙"},
         "审核结论": {"type": "string", "enum": ["通过", "不通过", ""]},
     }, "流转日志条目（按时间升序、已去重）"),
     "OrderDetail": _obj({
